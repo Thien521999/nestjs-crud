@@ -116,3 +116,6 @@ Sự khác nhau giữa các câu lệnh
 
 Lưu ý:
 Khi các bạn `npm i` thì artifacts sẽ được tạo tự động
+
+
+- DTO(Data Tranfer Object): dùng để mô tả kiểu dữ liệu của  object
