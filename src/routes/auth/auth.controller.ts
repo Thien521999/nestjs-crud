@@ -1,10 +1,12 @@
+import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common'
 import {
-  Body,
-  Controller,
-  Post,
-  // SerializeOptions
-} from '@nestjs/common'
-import { LoginBodyDTO, LoginResDTO, RegisterBodyDTO, RegisterResDTO } from './auth.dto'
+  LoginBodyDTO,
+  LoginResDTO,
+  RefreshTokenBodyDTO,
+  RefreshTokenResDTO,
+  RegisterBodyDTO,
+  RegisterResDTO,
+} from './auth.dto'
 import { AuthService } from './auth.service'
 
 @Controller('auth')
@@ -21,5 +23,11 @@ export class AuthController {
   @Post('login')
   async login(@Body() body: LoginBodyDTO) {
     return new LoginResDTO(await this.authService.login(body))
+  }
+
+  @Post('refresh-token')
+  @HttpCode(HttpStatus.OK) // để trả về status code 200
+  async refreshToken(@Body() body: RefreshTokenBodyDTO) {
+    return new RefreshTokenResDTO(await this.authService.refreshToken(body.refreshToken))
   }
 }
