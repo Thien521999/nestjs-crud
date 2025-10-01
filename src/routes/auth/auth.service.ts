@@ -1,15 +1,18 @@
-import { ConflictException, Injectable } from '@nestjs/common'
+import { ConflictException, Injectable, UnauthorizedException, UnprocessableEntityException } from '@nestjs/common'
 import { Prisma } from 'generated/prisma/client'
 import { HashingService } from 'src/shared/services/hashing.service'
 import { PrismaService } from 'src/shared/services/prisma.service'
+import { LoginBodyDTO, RegisterBodyDTO } from './auth.dto'
+import { TokenService } from 'src/shared/services/token.service'
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly hashingService: HashingService,
     private readonly prismaService: PrismaService,
+    private readonly tokenService: TokenService,
   ) {}
-  async register(body: any) {
+  async register(body: RegisterBodyDTO) {
     try {
       const hashedPassword = await this.hashingService.hash(body.password)
 
@@ -29,6 +32,57 @@ export class AuthService {
       }
 
       throw error
+    }
+  }
+
+  async login(body: LoginBodyDTO) {
+    // tìm email có khớp ko
+    const user = await this.prismaService.user.findUnique({
+      where: {
+        email: body.email,
+      },
+    })
+
+    if (!user) {
+      throw new UnauthorizedException('Account is not exist')
+    }
+
+    // kiểm tra password có khớp ko
+    const isPasswordMatch = await this.hashingService.compare(body.password, user.password)
+
+    if (!isPasswordMatch) {
+      throw new UnprocessableEntityException([
+        {
+          field: 'password',
+          error: 'Password is correct',
+        },
+      ])
+    }
+
+    const tokens = await this.generateTokens({ userId: user.id })
+    return tokens
+  }
+
+  async generateTokens(payload: { userId: number }) {
+    const [accessToken, refreshToken] = await Promise.all([
+      this.tokenService.signAccessToken(payload),
+      this.tokenService.signRereshToken(payload),
+    ])
+
+    const decodedRefreshToken = await this.tokenService.verifyRefreshToken(refreshToken)
+
+    // save refreshToken vào DB
+    await this.prismaService.refreshToken.create({
+      data: {
+        token: refreshToken,
+        userId: payload.userId,
+        expiresAt: new Date(decodedRefreshToken.exp * 1000),
+      },
+    })
+
+    return {
+      accessToken,
+      refreshToken,
     }
   }
 }

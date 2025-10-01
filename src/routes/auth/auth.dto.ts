@@ -37,3 +37,12 @@ export class RegisterResDTO {
     Object.assign(this, partial)
   }
 }
+
+export class LoginResDTO {
+  accesToken: string
+  refreshToken: string
+
+  constructor(partial: Partial<LoginResDTO>) {
+    Object.assign(this, partial)
+  }
+}
