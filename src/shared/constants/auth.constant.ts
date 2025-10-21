@@ -8,9 +8,9 @@ export const AuthType = {
 
 export type AuthTypeType = (typeof AuthType)[keyof typeof AuthType]
 
-export const ConditionGuardType = {
+export const ConditionGuard = {
   And: 'And',
   Or: 'Or',
 } as const
 
-export type ConditionGuardType = (typeof ConditionGuardType)[keyof typeof ConditionGuardType]
+export type ConditionGuardType = (typeof ConditionGuard)[keyof typeof ConditionGuard]

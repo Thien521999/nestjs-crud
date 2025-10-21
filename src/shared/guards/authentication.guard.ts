@@ -1,6 +1,6 @@
 import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common'
 import { Reflector } from '@nestjs/core'
-import { AuthType, ConditionGuardType } from '../constants/auth.constant'
+import { AuthType, ConditionGuard } from '../constants/auth.constant'
 import { AUTH_TYPE_KEY, AuthTypeDecoratorPayload } from '../decorators/auth.decorator'
 import { AccessTokenGuard } from './access-token.guard'
 import { APIKeyGuard } from './api-key.guard'
@@ -27,7 +27,7 @@ export class AuthenticationGuard implements CanActivate {
     const authTypeValue = this.reflector.getAllAndOverride<AuthTypeDecoratorPayload | undefined>(AUTH_TYPE_KEY, [
       context.getHandler(),
       context.getClass(),
-    ]) ?? { authTypes: [AuthType.None], options: { condition: ConditionGuardType.And } }
+    ]) ?? { authTypes: [AuthType.None], options: { condition: ConditionGuard.And } }
 
     console.log({ authTypeValue })
 
@@ -35,7 +35,7 @@ export class AuthenticationGuard implements CanActivate {
     console.log({ guards })
 
     let error = new UnauthorizedException()
-    if (authTypeValue.options.condition === ConditionGuardType.Or) {
+    if (authTypeValue.options.condition === ConditionGuard.Or) {
       for (const instance of guards) {
         const canActivate = await Promise.resolve(instance.canActivate(context)).catch((err) => {
           error = err

@@ -1,21 +1,23 @@
 import { Body, Controller, Delete, Get, Param, Post, Put } from '@nestjs/common'
-import { PostsService } from './posts.service'
-import { AuthType, ConditionGuardType } from 'src/shared/constants/auth.constant'
+import { AuthType, ConditionGuard } from 'src/shared/constants/auth.constant'
+import { ActiveUser } from 'src/shared/decorators/active-user.decorator'
 import { Auth } from 'src/shared/decorators/auth.decorator'
+import { PostsService } from './posts.service'
 
 @Controller('posts')
 export class PostsController {
   constructor(private readonly postService: PostsService) {}
 
-  @Auth([AuthType.Bearer, AuthType.APIKey], { condition: ConditionGuardType.And })
+  @Auth([AuthType.Bearer, AuthType.APIKey], { condition: ConditionGuard.And })
   @Get()
   getPosts() {
     return this.postService.getPosts()
   }
 
   @Post()
-  createPost(@Body() body: any) {
-    return this.postService.createPost(body)
+  @Auth([AuthType.Bearer])
+  createPost(@Body() body: any, @ActiveUser('userId') userId: number) {
+    return this.postService.createPost(userId, body)
   }
 
   @Get(':id')
