@@ -1,6 +1,8 @@
-import { Injectable } from '@nestjs/common'
+import { Injectable, NotFoundException } from '@nestjs/common'
 // import envConfig from 'src/shared/config'
+import { isNotFoundPrismaError } from 'src/shared/helpers'
 import { PrismaService } from 'src/shared/services/prisma.service'
+import { CreatePostBodyDTO, UpdatePostBodyDTO } from './post.dto'
 
 @Injectable()
 export class PostsService {
@@ -21,25 +23,94 @@ export class PostsService {
     })
   }
 
-  createPost(userId: number, body: any) {
+  createPost(userId: number, body: CreatePostBodyDTO) {
     return this.prismaService.post.create({
       data: {
         title: body.title,
         content: body.content,
         authorId: userId,
       },
+      include: {
+        author: {
+          omit: {
+            password: true,
+          },
+        },
+      },
     })
   }
 
-  getPost(id: string) {
-    return `Post ${id}`
+  async getPost(postId: number) {
+    try {
+      const post = await this.prismaService.post.findUniqueOrThrow({
+        where: {
+          id: postId,
+        },
+        include: {
+          author: {
+            omit: {
+              password: true,
+            },
+          },
+        },
+      })
+
+      return post
+    } catch (error) {
+      if (isNotFoundPrismaError(error)) {
+        throw new NotFoundException('Post not found')
+      }
+
+      throw error
+    }
   }
 
-  updatePost(id: string, body: any) {
-    return `Update ${id} : ${body}`
+  async updatePost({ postId, userId, body }: { postId: number; userId: number; body: UpdatePostBodyDTO }) {
+    try {
+      const post = await this.prismaService.post.update({
+        where: {
+          id: postId,
+          authorId: userId,
+        },
+        data: {
+          title: body.title,
+          content: body.content,
+        },
+        include: {
+          author: {
+            omit: {
+              password: true,
+            },
+          },
+        },
+      })
+
+      return post
+    } catch (error) {
+      if (isNotFoundPrismaError(error)) {
+        throw new NotFoundException('Post not found')
+      }
+
+      throw error
+    }
   }
 
-  deletePost(id: string) {
-    return `Delete ${id}`
+  async deletePost({ postId, userId }: { postId: number; userId: number }) {
+    try {
+      await this.prismaService.post.delete({
+        where: {
+          id: postId,
+          authorId: userId,
+        },
+      })
+
+      return true
+    } catch (error) {
+      if (isNotFoundPrismaError(error)) {
+        throw new NotFoundException('Post not found')
+      }
+
+      throw error
+    }
   }
 }
