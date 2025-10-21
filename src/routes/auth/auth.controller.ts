@@ -1,8 +1,17 @@
-import { Body, Controller, HttpCode, HttpStatus, Post, UseGuards } from '@nestjs/common'
-import { AccessTokenGuard } from 'src/shared/guards/access-token.guard'
+import {
+  Body,
+  Controller,
+  HttpCode,
+  HttpStatus,
+  Post,
+  // UseGuards
+} from '@nestjs/common'
+// import { AccessTokenGuard } from 'src/shared/guards/access-token.guard'
 import {
   LoginBodyDTO,
   LoginResDTO,
+  LogoutBodyDTO,
+  LogoutResDTO,
   RefreshTokenBodyDTO,
   RefreshTokenResDTO,
   RegisterBodyDTO,
@@ -26,10 +35,15 @@ export class AuthController {
     return new LoginResDTO(await this.authService.login(body))
   }
 
-  @UseGuards(AccessTokenGuard)
+  // @UseGuards(AccessTokenGuard)
   @Post('refresh-token')
   @HttpCode(HttpStatus.OK) // để trả về status code 200
   async refreshToken(@Body() body: RefreshTokenBodyDTO) {
     return new RefreshTokenResDTO(await this.authService.refreshToken(body.refreshToken))
+  }
+
+  @Post('logout')
+  async logout(@Body() body: LogoutBodyDTO) {
+    return new LogoutResDTO(await this.authService.logout(body.refreshToken))
   }
 }

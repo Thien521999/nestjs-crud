@@ -36,7 +36,7 @@ class ConfigSchema {
 const configServer = plainToInstance(ConfigSchema, process.env, {
   enableImplicitConversion: true,
 })
-console.log(configServer)
+// console.log(configServer)
 
 const e = validateSync(configServer)
 if (e.length > 0) {
